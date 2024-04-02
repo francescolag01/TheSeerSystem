@@ -13,12 +13,13 @@
 /*
 
 AT THIS TIME THE PROGRAM SHOULD PRINT IN THE FORMAT OF 
+*(xx = distance)*
 
-free -- distance = xx
+f xx
 
 OR 
 
-occupied -- distance = xx
+o xx
 
 */
 
@@ -68,7 +69,7 @@ void loop() {
   //Serial.println();
 
   if (cm < 10) {
-    Serial.print("occupied -- distance = ");
+    Serial.print("o");
     Serial.print(cm);
     Serial.println();
     //if (last_measure == true) {
@@ -82,7 +83,7 @@ void loop() {
     //Serial.println();
   //}
   else {
-    Serial.print("free -- distance = ");
+    Serial.print("f");
     Serial.print(cm);
     Serial.println();
     //last_measure = false;
