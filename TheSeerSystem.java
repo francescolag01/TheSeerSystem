@@ -13,8 +13,9 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
 //I downloaded this library from https://fazecast.github.io/jSerialComm/ , to use the Arduinos serial interface
-import com.fazecast.jSerialComm.*;
+import com.fazecast.jSerialComm.SerialPort;
 
 public class TheSeerSystem {
 	public static JFrame f;
@@ -30,7 +31,8 @@ public class TheSeerSystem {
                 
                 //establish serial connection to the Arudino
                 //we create the comport obj and open the arudino port
-                SerialPort comPort = SerialPort.getCommPort("COM4"); // or whatever port we end up using
+                SerialPort comPort = SerialPort.getCommPort("COM5"); // or whatever port we end up using
+                //TODO: I get an error here. Is it because I am not hooked up to the Aruidno>
                 comPort.openPort();
          
                 try {
@@ -40,6 +42,7 @@ public class TheSeerSystem {
                 	while(comPort.bytesAvailable() == 0) {
 
                 	     
+                		
                 	}
                 	//read the serial port
                 	//TODO: Determine how we want to send the message from the arduino, and how to process it in this application 
@@ -54,12 +57,13 @@ public class TheSeerSystem {
 	                	//the runways changing color based on if there is a plane or not
 	                	//draw a plane icon on the screen, relative to the physical plane's location on the runway
                 		//near the plane icon, draw its speed to the screen
+                		
                 	
                 	//TODO: What features can we add for polish?
                 		//draw text to label useful information
              	   		//change direction of plane if it goes backwards
                 		//add a logo
-                		//
+                		//settings
              	   //redraw the screen
 
                   
@@ -116,9 +120,12 @@ public static Image loadPlane() {
 Image img = null;
 
 //loads the png
-URL path = TheSeerSystem.class.getResource("imgbin_airplane-png.png");
+URL url = TheSeerSystem.class.getResource("imgbin_airplane-png.png");
+String path = url.toString().substring(5);
+//the above code first searches locally for the png. When it finds it, it has the prefix "file:"
+//but the below .read() fails if that text is included. Simply, we create a new substring starting on the characters we want.
     	try {
-    	img = ImageIO.read(new File(path.toString()));
+    	img = ImageIO.read(new File(path));
     	}catch( Exception e) {
     		System.out.println("Could not load airplane image.");
     		e.printStackTrace();
@@ -168,7 +175,7 @@ class drawPanel extends JPanel {
         g.setColor(Color.GREEN);
         g.fillRect(100,450,800,50); //sensor 1
         g.setColor(Color.GREEN);
-        g.fillRect(475,100,50,800); //sensor 1
+        g.fillRect(475,100,50,800); //sensor 2
         
         //draw planes based on location
         /*if(sensor 1 or 2 detected)}
@@ -181,7 +188,17 @@ class drawPanel extends JPanel {
 
 
 
-
+/*
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
 	
 
 	
