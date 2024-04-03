@@ -133,6 +133,14 @@ public class TheSeerSystem {
              	   		//change direction of plane if it goes backwards
                 		//add a logo
                 		//settings
+				//close the serial connection when the application is closed
+
+			//TODO: potential problems I forsee
+				//the sensor will be jittery and cause the icon of the plane to fly around the screen, give innacurate readings, or make 10000 popups appear
+				//something crashing during a demo, and us looking stupid. Must run the program for a very long time to see if any bugs arise
+				//what happens when the program is activated and things are on the runway? or if theyre all off the runway?
+				
+				
              	   //redraw the screen
                 		f.update(f.getGraphics());
                   
