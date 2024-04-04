@@ -27,9 +27,11 @@ o xx
 
 // sensor2 --> echo = 5 trig = 6
 
-int trigPin = 3;    // Trigger
-int echoPin = 2;    // Echo
-long duration, cm, inches;
+int trigPin1 = 3;    // Trigger of first sensor
+int echoPin1 = 2;    // Echo of first sensor
+int trigPin2 = 9;
+int echoPin2 = 8;
+long duration1, cm1, duration2, cm2;
 //bool last_measure = false;
 //long t1, t2;
 
@@ -39,27 +41,36 @@ void setup() {
   //Serial Port begin
   Serial.begin (9600);
   //Define inputs and outputs
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
+  pinMode(trigPin1, OUTPUT);
+  pinMode(echoPin1, INPUT);
+  pinMode(trigPin2, OUTPUT);
+  pinMode(echoPin2, INPUT);
 }
  
 void loop() {
   // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
-  digitalWrite(trigPin, LOW);
+  digitalWrite(trigPin1, LOW);
+  digitalWrite(trigPin2, LOW);
   delayMicroseconds(5);
-  digitalWrite(trigPin, HIGH);
+  digitalWrite(trigPin1, HIGH);
+  digitalWrite(trigPin2, HIGH);
   delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
+  digitalWrite(trigPin1, LOW);
+  digitalWrite(trigPin2, LOW);
  
   // Read the signal from the sensor: a HIGH pulse whose
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
-  pinMode(echoPin, INPUT);
-  duration = pulseIn(echoPin, HIGH);
+  pinMode(echoPin1, INPUT);
+  pinMode(echoPin2, INPUT);
+  duration1 = pulseIn(echoPin1, HIGH);
+  duration2 = pulseIn(echoPin2, HIGH);
+
  
   // Convert the time into a distance
-  cm = (duration/2) / 29.1;     // Divide by 29.1 or multiply by 0.0343
+  cm1 = (duration1/2) / 29.1;     // Divide by 29.1 or multiply by 0.0343
+  cm2 = (duration2/2) / 29.1;
   //inches = (duration/2) / 74;   // Divide by 74 or multiply by 0.0135
   
   //Serial.print(inches);
@@ -68,9 +79,9 @@ void loop() {
   //Serial.print("cm");
   //Serial.println();
 
-  if (cm < 10) {
-    Serial.print("o");
-    Serial.print(cm);
+  if (cm1 < 30) {
+    Serial.print("o1");
+    Serial.print(cm1);
     Serial.println();
     //if (last_measure == true) {
       //t2 = cm;
@@ -83,10 +94,22 @@ void loop() {
     //Serial.println();
   //}
   else {
-    Serial.print("f");
-    Serial.print(cm);
+    Serial.print("f1");
+    Serial.print(cm1);
     Serial.println();
     //last_measure = false;
+  }
+
+  if (cm2 < 30) {
+    Serial.print("o2");
+    Serial.print(cm2);
+    Serial.println();
+  }
+
+  else {
+    Serial.print("f2");
+    Serial.print(cm2);
+    Serial.println();
   }
   
   delay(250);
@@ -102,4 +125,3 @@ void loop() {
   //long speed = abs(t1 - t2) / delay;
   //return speed;
 //}
-
