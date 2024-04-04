@@ -35,9 +35,14 @@ public class TheSeerSystem {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
+            	//multithreading babay
+            	//the first iteration of this all ran in one thread. Simply only putting the GUI code in its own thread increseases performance by a ton
+            	
             	//initializes the GUI
                 createAndShowGUI();
                 //load and store the plane image
+            }});
+        
                 planeImage = loadPlane();
                 
                 //establish serial connection to the Arudino
@@ -57,11 +62,12 @@ public class TheSeerSystem {
                 	}
                 	//read the serial port
                 	//TODO: Determine how we want to send the message from the arduino, and how to process it in this application 
-             	    byte[] readBuffer = new byte[comPort.bytesAvailable()];
+                		//done, I expanded on ryans idea and changed it a bit.
+             	   // byte[] readBuffer = new byte[comPort.bytesAvailable()];
              	    //we convert the byte buffer into one big string displaying the data of the two sensors
-                	String msg = new String(readBuffer);
+                	//String msg = new String(readBuffer);
                 	
-                	
+                	String msg = "o058o200";
              	   
                 	//messages will be in the form of XiiiXiii, where
                 	//X is either f for 'free' or o for 'occupied'
@@ -75,7 +81,7 @@ public class TheSeerSystem {
                 	currRunwayOneDist = Integer.parseInt(msg.substring(1,3));
                 	
                 	prevRunwayTwoOcc = currRunwayTwoOcc;
-                	currRunwayOneOcc = msg.charAt(0) == 'f' ? false : true;
+                	currRunwayTwoOcc = msg.charAt(4) == 'f' ? false : true;
                 	prevRunwayTwoDist = currRunwayTwoDist;
                 	currRunwayTwoDist = Integer.parseInt(msg.substring(5,7));
                 	
@@ -133,16 +139,16 @@ public class TheSeerSystem {
              	   		//change direction of plane if it goes backwards
                 		//add a logo
                 		//settings
-				//close the serial connection when the application is closed
-
-			//TODO: potential problems I forsee
-				//the sensor will be jittery and cause the icon of the plane to fly around the screen, give innacurate readings, or make 10000 popups appear
-				//something crashing during a demo, and us looking stupid. Must run the program for a very long time to see if any bugs arise
-				//what happens when the program is activated and things are on the runway? or if theyre all off the runway?
-				
-				
-             	   //redraw the screen
-                		f.update(f.getGraphics());
+                		//make the runway intersection look prettier
+                	
+                	//TODO: potential problems I forsee
+    				//the sensor could be jittery and cause the icon of the plane to fly around the screen, give innacurate readings, or make 10000 popups appear
+    				//something crashing during a demo, and us looking stupid. Must run the program for a very long time to see if any bugs arise
+    				//what happens when the program is activated and things are on the runway? or if theyre all off the runway?
+                		//I tested this by creating a string with the format (String msg = "o012f100";), and the program starts correctly in all configurations.
+                	//when I simulate the planes crashing, the program gets stuck in an infinite popup loop. 
+                	//all of the text, images, and shapes are drawn to the screen with hand drawn coordinates.
+                
                   
                 }
              } catch (Exception e) {
@@ -153,12 +159,12 @@ public class TheSeerSystem {
                 
                
             
-            }});
+            
     }
 public static int calculateSpeed(int prev, int curr) {
 	//calculate speed using the prev and current distance
 	//USE THE REAL LIFE SENSOR READINGS!
-	return (curr - prev) / delay;
+	return (curr- prev) / delay;
 }
     
     
@@ -238,25 +244,48 @@ class drawPanel extends JPanel {
         //this is also where the image of the plane will be drawn, as well as speed
         
         //draw text
-        
+      //shifts the location of the text, for easy changing later
+      int a = 100;
+      int b = 0;
+      //TODO: make a font that makes the text look bigger and nicer
+     // g.setFont();
       
-       /* g.setColor(Color.BLACK);
-        g.drawString("Runway 1", x, y);
-        g.drawString("Status:", x, y);
-        g.drawString("Speed:", x, y);
-        g.drawString("Runway 2", x, y);
-        g.drawString("Status:", x, y);
-        g.drawString("Speed:", x, y); */
+       g.setColor(Color.BLACK);
+        g.drawString("Runway 1", 600+a, 600+b);
+        g.drawString("Status:", 600+a, 630+b);
+        if(TheSeerSystem.currRunwayOneOcc == true) {
+        	g.drawString("Occupied",640+a,630+b);
+        	g.drawString(Integer.toString(TheSeerSystem.calculateSpeed(TheSeerSystem.prevRunwayOneDist,TheSeerSystem.currRunwayOneDist)), 640+a, 660+b);
+        }else {
+        	g.drawString("Free",640+a,630+b);
+        	g.drawString("N/A", 640+a, 660+b);
+        	
+        }
+        
+        g.drawString("Speed:", 600+a, 660+b);
+        
+         
+        g.drawString("Runway 2", 600+a, 700+b);
+        g.drawString("Status:", 600+a, 730+b);
+        if(TheSeerSystem.currRunwayTwoOcc == true) {
+        	g.drawString("Occupied",640+a,730+b);
+        	g.drawString(Integer.toString(TheSeerSystem.calculateSpeed(TheSeerSystem.prevRunwayTwoDist,TheSeerSystem.currRunwayTwoDist)), 640+a, 760+b);
+        }else {
+        	g.drawString("Free",640+a,730+b);
+        	g.drawString("N/A", 640+a, 760+b);
+        }
+        	 g.drawString("Speed:", 600+a, 760+b);
         
   
        
        
         //draw runway and planes based on location
         if(TheSeerSystem.currRunwayOneOcc == true) {
+        	//System.out.println("1 occupied");
         	//plane on runway 1
         	g.setColor(Color.RED);
             g.fillRect(100,450,800,50); //sensor 1 is the horizontal 
-        	int x = TheSeerSystem.smoothDistance(TheSeerSystem.currRunwayOneDist);
+        	int x = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayOneDist);
         	g.drawImage(TheSeerSystem.planeImage, x, 450, 60,60,null);
         }else {
         	//no plane on runway 1
@@ -267,10 +296,10 @@ class drawPanel extends JPanel {
         
         if(TheSeerSystem.currRunwayTwoOcc == true) {
         	//plane on runway 2
-
+        	//System.out.println("2 occupied");
             g.setColor(Color.RED);
             g.fillRect(475,100,50,800); //sensor 2 is the vertical
-        	int y = TheSeerSystem.smoothDistance(TheSeerSystem.currRunwayTwoDist);
+        	int y = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayTwoDist);
         	g.drawImage(TheSeerSystem.planeImage, 475, y, 60,60,null);
         }else {
         	//no plane on runway 2
