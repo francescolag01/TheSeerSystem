@@ -1,5 +1,6 @@
 /*
  * created by Rui Santos, https://randomnerdtutorials.com
+ * adapted by Francesco Lagana, Ryan Putt
  * 
  * Complete Guide for Ultrasonic Sensor HC-SR04
  *
@@ -10,37 +11,21 @@
         GND: GND
  */
 
-/*
-
-AT THIS TIME THE PROGRAM SHOULD PRINT IN THE FORMAT OF 
-*(xx = distance)*
-
-f xx
-
-OR 
-
-o xx
-
-*/
-
-
-
-// sensor2 --> echo = 5 trig = 6
 
 int trigPin1 = 3;    // Trigger of first sensor
 int echoPin1 = 2;    // Echo of first sensor
-int trigPin2 = 9;
-int echoPin2 = 8;
+int trigPin2 = 5;
+int echoPin2 = 4;
 long duration1, cm1, duration2, cm2;
-//bool last_measure = false;
-//long t1, t2;
 
-//long compute_speed(long t1, long t2);
  
 void setup() {
   //Serial Port begin
+
   Serial.begin (9600);
+
   //Define inputs and outputs
+
   pinMode(trigPin1, OUTPUT);
   pinMode(echoPin1, INPUT);
   pinMode(trigPin2, OUTPUT);
@@ -50,78 +35,52 @@ void setup() {
 void loop() {
   // The sensor is triggered by a HIGH pulse of 10 or more microseconds.
   // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
+
   digitalWrite(trigPin1, LOW);
-  digitalWrite(trigPin2, LOW);
   delayMicroseconds(5);
   digitalWrite(trigPin1, HIGH);
-  digitalWrite(trigPin2, HIGH);
   delayMicroseconds(10);
   digitalWrite(trigPin1, LOW);
+  pinMode(echoPin1, INPUT);
+  duration1 = pulseIn(echoPin1, HIGH);
+  cm1 = (duration1/2) / 29.1;  
+
   digitalWrite(trigPin2, LOW);
+  delayMicroseconds(5);
+  digitalWrite(trigPin2, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin2, LOW);
+  pinMode(echoPin2, INPUT);
+  duration2 = pulseIn(echoPin2, HIGH);
+  cm2 = (duration2/2) / 29.1;
  
   // Read the signal from the sensor: a HIGH pulse whose
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
-  pinMode(echoPin1, INPUT);
-  pinMode(echoPin2, INPUT);
-  duration1 = pulseIn(echoPin1, HIGH);
-  duration2 = pulseIn(echoPin2, HIGH);
-
- 
-  // Convert the time into a distance
-  cm1 = (duration1/2) / 29.1;     // Divide by 29.1 or multiply by 0.0343
-  cm2 = (duration2/2) / 29.1;
-  //inches = (duration/2) / 74;   // Divide by 74 or multiply by 0.0135
-  
-  //Serial.print(inches);
-  //Serial.print("in, ");
-  //Serial.print(cm);
-  //Serial.print("cm");
-  //Serial.println();
 
   if (cm1 < 30) {
-    Serial.print("o1");
+    Serial.print("o1 ");
     Serial.print(cm1);
     Serial.println();
-    //if (last_measure == true) {
-      //t2 = cm;
-      //Serial.print(compute_speed(t1, t2));
     }
-    //last_measure = true;
-    //t1 = cm;
-    // need to fix below line
-    //Serial.print("t1 = %l\nt2 = %l", t1, t2);
-    //Serial.println();
-  //}
+
   else {
-    Serial.print("f1");
+    Serial.print("f1 ");
     Serial.print(cm1);
     Serial.println();
-    //last_measure = false;
   }
 
   if (cm2 < 30) {
-    Serial.print("o2");
+    Serial.print("o2 ");
     Serial.print(cm2);
     Serial.println();
   }
 
   else {
-    Serial.print("f2");
+    Serial.print("f2 ");
     Serial.print(cm2);
     Serial.println();
   }
   
   delay(250);
 }
-
-//long compute_speed(long t1, long t2) {
-  // this will be made a constant
-  //long delay = .25015;
-  // t1 is distance at t1
-  // t2 is distance at t2
-  // speed = |t1 - t2| / delta_time
-  // delay = 15 microseconds + 250 ms = 250.015
-  //long speed = abs(t1 - t2) / delay;
-  //return speed;
-//}
