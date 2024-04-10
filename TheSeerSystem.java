@@ -20,12 +20,13 @@ import com.fazecast.jSerialComm.SerialPort;
 
 public class TheSeerSystem {
 	public static JFrame f; // the frame displaying the application
+	public static drawPanel dp; // the panel that draws images to the screen
 	public static Image planeImage; // plane icon drawn on screen
 	//TODO: DEFINE THE FOLLOWING FINAL VARIBLES
-	static final int delay = 50; //The delay of the Arduino, in milliseconds. used to calculate the speed
+	static final double delay = 250.250; //The delay of the Arduino, in milliseconds. used to calculate the speed
 	static final int closeCallDist = 300; // the threshold to trigger a close call popup
 	static final int collisionDist = 20; // the threshhold to trigger a collision popup
-   
+   //runway total length is 59 inches
 	public static int prevRunwayOneDist, prevRunwayTwoDist = 0; // the last distances detected by sensors one and two, used to calculate speed
 	public static int currRunwayOneDist, currRunwayTwoDist = 0; // the current distances detected by sensors one and two
 	public static int runwayOneSpeed, runwayTwoSpeed; // the current speed of planes on the runway
@@ -41,8 +42,9 @@ public class TheSeerSystem {
             	//initializes the GUI
                 createAndShowGUI();
                 //load and store the plane image
+                dp.update(dp.getGraphics());
             }});
-        
+        	
                 planeImage = loadPlane();
                 
                 //establish serial connection to the Arudino
@@ -67,9 +69,9 @@ public class TheSeerSystem {
              	    //we convert the byte buffer into one big string displaying the data of the two sensors
                 	//String msg = new String(readBuffer);
                 	
-                	String msg = "o058o200";
-             	   
-                	//messages will be in the form of XiiiXiii, where
+                	String msg = "f050o059";
+                	
+                	//messages will be in the form of XiiiiXiiii, where
                 	//X is either f for 'free' or o for 'occupied'
                 	//iii are 3 digits displaying its position relative to the start of the sensor.
                 	
@@ -84,6 +86,7 @@ public class TheSeerSystem {
                 	currRunwayTwoOcc = msg.charAt(4) == 'f' ? false : true;
                 	prevRunwayTwoDist = currRunwayTwoDist;
                 	currRunwayTwoDist = Integer.parseInt(msg.substring(5,7));
+                	System.out.println(currRunwayTwoDist);
                 	
                 	//We use this to calculate the speed of each aircraft, and also to track arrivals and departures.
                 	
@@ -115,10 +118,10 @@ public class TheSeerSystem {
                 	
                 	if(computeDistance(currRunwayOneDist,currRunwayTwoDist) >= collisionDist) {
                 		//collision (oh no)
-                		JOptionPane.showMessageDialog(TheSeerSystem.f,"OH NO: AIRCRAFT HAVE COLLIDED ON RUNWAY 1 AND 2.");
+                	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"OH NO: AIRCRAFT HAVE COLLIDED ON RUNWAY 1 AND 2.");
                 	}else if(computeDistance(currRunwayOneDist,currRunwayTwoDist) >= closeCallDist) {
                 		//close call popup
-                		JOptionPane.showMessageDialog(TheSeerSystem.f,"DANGER: AIRCRAFT ARE LESS THAN 300 FEET APART.");
+                	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"DANGER: AIRCRAFT ARE LESS THAN 300 FEET APART.");
                 	}else {
                 		//no danger of collision, do nothing
                 		
@@ -149,6 +152,7 @@ public class TheSeerSystem {
                 	//when I simulate the planes crashing, the program gets stuck in an infinite popup loop. 
                 	//all of the text, images, and shapes are drawn to the screen with hand drawn coordinates.
                 
+                	
                   
                 }
              } catch (Exception e) {
@@ -164,16 +168,18 @@ public class TheSeerSystem {
 public static int calculateSpeed(int prev, int curr) {
 	//calculate speed using the prev and current distance
 	//USE THE REAL LIFE SENSOR READINGS!
-	return (curr- prev) / delay;
+	return (int) ((curr- prev) / delay);
 }
     
     
-public static int scaleDistance(int distance) {
+public static double scaleDistance(int distance) {
 	//this function takes in the real life distance of the plane,
 	//and scales it so the icon on the screen is proportional to the real life distance.
 	//TODO: DETERMINE THE FACTOR THAT SCALES IT THE MOST APPROPRITATELY
-	int factor = 1;
-	return distance / factor;
+	double factor = 13.559;
+	double dist = distance * factor;
+	System.out.println(distance + " " + dist);
+	return dist;
 }
 
 public static int computeDistance(int d1, int d2) {
@@ -198,7 +204,8 @@ public static int computeDistance(int d1, int d2) {
         f.setLocationRelativeTo(null);
         f.setResizable(false);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        f.add(new drawPanel());
+        dp = new drawPanel();
+        f.add(dp);
         f.pack();
         f.setVisible(true);
        
@@ -285,8 +292,8 @@ class drawPanel extends JPanel {
         	//plane on runway 1
         	g.setColor(Color.RED);
             g.fillRect(100,450,800,50); //sensor 1 is the horizontal 
-        	int x = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayOneDist);
-        	g.drawImage(TheSeerSystem.planeImage, x, 450, 60,60,null);
+        	double x = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayOneDist);
+        	g.drawImage(TheSeerSystem.planeImage, (int)x, 450, 60,60,null);
         }else {
         	//no plane on runway 1
         	g.setColor(Color.GREEN);
@@ -299,8 +306,9 @@ class drawPanel extends JPanel {
         	//System.out.println("2 occupied");
             g.setColor(Color.RED);
             g.fillRect(475,100,50,800); //sensor 2 is the vertical
-        	int y = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayTwoDist);
-        	g.drawImage(TheSeerSystem.planeImage, 475, y, 60,60,null);
+            double y = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayTwoDist);
+            System.out.println("yayay");
+        	g.drawImage(TheSeerSystem.planeImage, 475,(int) y, 60,60,null);
         }else {
         	//no plane on runway 2
             g.setColor(Color.GREEN);
