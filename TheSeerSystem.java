@@ -4,11 +4,12 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.security.auth.x500.X500Principal;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -22,6 +23,7 @@ public class TheSeerSystem {
 	public static JFrame f; // the frame displaying the application
 	public static drawPanel dp; // the panel that draws images to the screen
 	public static Image planeImage; // plane icon drawn on screen
+	public static SerialPort comPort;
 	//TODO: DEFINE THE FOLLOWING FINAL VARIBLES
 	static final double delay = 250.250; //The delay of the Arduino, in milliseconds. used to calculate the speed
 	static final int closeCallDist = 300; // the threshold to trigger a close call popup
@@ -33,6 +35,8 @@ public class TheSeerSystem {
 	public static boolean prevRunwayOneOcc,prevRunwayTwoOcc = false; // True if a plane is on the runway last timestep
 	public static boolean currRunwayOneOcc,currRunwayTwoOcc = false; // True if a plane is on the runway currently
 	
+	
+	
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
@@ -41,36 +45,62 @@ public class TheSeerSystem {
             	
             	//initializes the GUI
                 createAndShowGUI();
-                //load and store the plane image
-                dp.update(dp.getGraphics());
+             
+                
+               
             }});
-        	
+        		//load and store the plane image
                 planeImage = loadPlane();
                 
                 //establish serial connection to the Arudino
                 //we create the comport obj and open the arudino port
-                SerialPort comPort = SerialPort.getCommPort("COM5"); // or whatever port we end up using
-                //TODO: I get an error here. Is it because I am not hooked up to the Aruidno>
+                comPort = SerialPort.getCommPort("COM5"); // or whatever port we end up using
+                //TODO: I get an error here. Is it because I am not hooked up to the Aruidno>        
                 comPort.openPort();
-         
+                comPort.setBaudRate(9600);
+             //   comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,0, 0);
+              
+                /* //testing
+                Stack<String> testValues = new Stack<>();
+                for(int i = 0; i < 59; i++) {
+                	if (i < 10) {
+                		testValues.push(String.format("o00%do00%d",i,i));
+                	}else {
+                		testValues.push(String.format("o0%do0%d",i,i));
+                	}
+                }  */ //testing
+                
+                //here we create the popups that will be used
+                
                 try {
                 while (true)
                 {
                 	 //wait for the serial interrupt
-                	while(comPort.bytesAvailable() == 0) {
-
-                	     
+                	//System.out.println(comPort.isOpen());
+                	//System.out.println(comPort.bytesAvailable());
+                	if(!comPort.isOpen()) {
+                	//port didnt open, uh oh	
                 		
+                	throw new Exception("Could not connect to the Arudino.");	
+                	}
+                		
+                		
+                	
+                	
+                	while(comPort.bytesAvailable() == 0) {
+                		//there is no message to read, we wait
+                	     
+                		//System.out.println("waiting");
                 	}
                 	//read the serial port
                 	//TODO: Determine how we want to send the message from the arduino, and how to process it in this application 
                 		//done, I expanded on ryans idea and changed it a bit.
-             	   // byte[] readBuffer = new byte[comPort.bytesAvailable()];
+             	   	byte[] readBuffer = new byte[comPort.bytesAvailable()];
              	    //we convert the byte buffer into one big string displaying the data of the two sensors
-                	//String msg = new String(readBuffer);
+                	String msg = new String(readBuffer);
                 	
-                	String msg = "f050o059";
-                	
+                	// String msg = testValues.pop(); //testing
+                	 //String msg = "o050o050"; //testing
                 	//messages will be in the form of XiiiiXiiii, where
                 	//X is either f for 'free' or o for 'occupied'
                 	//iii are 3 digits displaying its position relative to the start of the sensor.
@@ -80,13 +110,13 @@ public class TheSeerSystem {
                 	prevRunwayOneOcc = currRunwayOneOcc;
                 	currRunwayOneOcc = msg.charAt(0) == 'f' ? false : true;
                 	prevRunwayOneDist = currRunwayOneDist;
-                	currRunwayOneDist = Integer.parseInt(msg.substring(1,3));
+                	currRunwayOneDist = Integer.parseInt(msg.substring(1,4));
                 	
                 	prevRunwayTwoOcc = currRunwayTwoOcc;
                 	currRunwayTwoOcc = msg.charAt(4) == 'f' ? false : true;
                 	prevRunwayTwoDist = currRunwayTwoDist;
-                	currRunwayTwoDist = Integer.parseInt(msg.substring(5,7));
-                	System.out.println(currRunwayTwoDist);
+                	currRunwayTwoDist = Integer.parseInt(msg.substring(5,8));
+                	
                 	
                 	//We use this to calculate the speed of each aircraft, and also to track arrivals and departures.
                 	
@@ -130,10 +160,11 @@ public class TheSeerSystem {
                 	
                 	
              	   //TODO:What is the main functionality of the software?
-	                	//Popups stating arrivals, departures, near misses, and collisions DONE, NEEDS TESTING
-	                	//the runways changing color based on if there is a plane or not DONE, NEEDS TESTING
-	                	//draw a plane icon on the screen, relative to the physical plane's location on the runway. DONE, NEEDS TESTING
-                		//On a panel, display runway number, plane occupancy, and speed
+	                	//Popups stating arrivals, departures, near misses, and collisions REMAKE THEM SO THEY APPEAR IN THE CORNER, and DONT STOP WHOLE PROGRAM
+	                	//the runways changing color based on if there is a plane or not COMPLETE
+	                	//draw a plane icon on the screen, relative to the physical plane's location on the runway. DONE, WORKS IN TESTING. TEST WITH REAL SENSOR READY
+                		//On a panel, display runway number, plane occupancy, and speed COMPLETE
+                		//error correction
                 		
                 	
                 	//TODO: What features can we add for polish?
@@ -151,12 +182,15 @@ public class TheSeerSystem {
                 		//I tested this by creating a string with the format (String msg = "o012f100";), and the program starts correctly in all configurations.
                 	//when I simulate the planes crashing, the program gets stuck in an infinite popup loop. 
                 	//all of the text, images, and shapes are drawn to the screen with hand drawn coordinates.
-                
+                	//the program stops running when a popup opens (run it in another thread)
                 	
+                	//redraw the screen to update the images
+                	 dp.update(dp.getGraphics());
                   
                 }
              } catch (Exception e) {
             	 e.printStackTrace();
+            	
             	 }
              comPort.closePort();
             	  
@@ -176,9 +210,9 @@ public static double scaleDistance(int distance) {
 	//this function takes in the real life distance of the plane,
 	//and scales it so the icon on the screen is proportional to the real life distance.
 	//TODO: DETERMINE THE FACTOR THAT SCALES IT THE MOST APPROPRITATELY
-	double factor = 13.559;
+	double factor = 14.5;
 	double dist = distance * factor;
-	System.out.println(distance + " " + dist);
+	//System.out.println(distance + " " + dist);
 	return dist;
 }
 
@@ -208,6 +242,16 @@ public static int computeDistance(int d1, int d2) {
         f.add(dp);
         f.pack();
         f.setVisible(true);
+        
+        f.addWindowListener( new WindowAdapter()
+        {
+          public void windowClosing(WindowEvent e)
+           {
+        	  //closes the serialport when the window closes
+        	  //because we are polite
+        	  comPort.closePort();
+            }
+         });
        
     }
     
@@ -236,8 +280,9 @@ return img;
 
 class drawPanel extends JPanel {
 
+
 	private static final long serialVersionUID = 1L;
-	
+
 
 	public drawPanel() {
         setBorder(BorderFactory.createLineBorder(Color.black));
@@ -293,7 +338,12 @@ class drawPanel extends JPanel {
         	g.setColor(Color.RED);
             g.fillRect(100,450,800,50); //sensor 1 is the horizontal 
         	double x = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayOneDist);
-        	g.drawImage(TheSeerSystem.planeImage, (int)x, 450, 60,60,null);
+        	
+        	if (x < 90) {
+         	   x = 90;
+            }
+        	
+        	g.drawImage(TheSeerSystem.planeImage, (int)x, 445, 60,60,null);
         }else {
         	//no plane on runway 1
         	g.setColor(Color.GREEN);
@@ -307,8 +357,10 @@ class drawPanel extends JPanel {
             g.setColor(Color.RED);
             g.fillRect(475,100,50,800); //sensor 2 is the vertical
             double y = TheSeerSystem.scaleDistance(TheSeerSystem.currRunwayTwoDist);
-            System.out.println("yayay");
-        	g.drawImage(TheSeerSystem.planeImage, 475,(int) y, 60,60,null);
+           if (y < 90) {
+        	   y = 90;
+           }
+        	g.drawImage(TheSeerSystem.planeImage, 470,(int) y, 60,60,null);
         }else {
         	//no plane on runway 2
             g.setColor(Color.GREEN);
