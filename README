@@ -1,0 +1,50 @@
+This code is for the national ACRP competition, for the PSU class ENGR 408: Leadership Principles.
+We are a group of 5: Me(Francesco Lagana), Jacob Singer, Ryan Putt, James Capece. and Michael Casey.
+
+This is the GUI that reads data from the Arduino, and displays it on the screen.
+
+How to Setup:
+1. Start the Arduino program
+2. Make sure the serial monitor is closed
+3. Open this application
+The app should directly listen to the COM5 port that the arduino is on. If the program cant connect to the arduino, you have to rebuild the project :(
+
+How to Rebuild the Project :(
+look in the arduino IDE and read what com port it is using. 
+Go to line 57 of TheSeerSystem.java and change the com port to the arduino.
+If you havent done this before, download the jSerialCom jar and follow the instructions below, otherwise skip
+
+go to eclipse, right click the (default package) in the src folder, and go build path> configure build path>Libraries>add external jars> {location of jSerialCom}.
+
+To make the application, go to File>export>java>runnable jar.
+for launch configuration, select the seer system project
+pick an export path
+finish.
+
+This creates a Jar wherever you specified, that you can run to start the program
+
+
+
+
+
+How to Use
+Currently, the program seems fine to start if planes are or arent on the runway.
+A When a plane lands and takes off, a dialog appears. Click OK and the program resumes.
+The bottom right has information about runway 1 (Horizontal) and 2(Vertical).
+If no plane is there, the speed is N/A and the color is green.
+If there is one it shows its current speed (It only displays 0 in testing, but I think once the sensors are hooked up it will be correct) and the color is red.
+Notice the planes position changed based on how the model plane moves physically.
+Be amazed.
+We all did a lot of hard work to get to this point, and I want to congratulate everybody on their great effots on this project.
+The GUI isnt perfect yet, but the bugs WILL be resolved before wednesday, 4/16 for tuesdays workday
+
+
+Bugs
+A bug currently is that when a pop up is open, the program does not update.
+The close call dialog boxes are disabled because we need to determine the right distances for them to trigger,
+and also solve the bug of them opening forever if the conditions are met.
+need to determine the values that warrant a close call, collision, and also the delay of the sensor readings.
+FIX MAYBE: To give the most accurate reading, I think we have to take into account the sensors delay, as well as the inherent arduino delay, as well as any user defined wait() calls and such. TBD
+
+
+
