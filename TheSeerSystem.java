@@ -19,13 +19,13 @@ import javax.swing.SwingUtilities;
 //I downloaded this library from https://fazecast.github.io/jSerialComm/ , to use the Arduinos serial interface
 import com.fazecast.jSerialComm.SerialPort;
 
-public class TheSeerSystem {
+public class TheSeerSystem{
 	public static JFrame f; // the frame displaying the application
 	public static drawPanel dp; // the panel that draws images to the screen
 	public static Image planeImage; // plane icon drawn on screen
 	public static SerialPort comPort;
 	//TODO: DEFINE THE FOLLOWING FINAL VARIBLES
-	static final double delay = 250.250; //The delay of the Arduino, in milliseconds. used to calculate the speed
+	static final double delay = 250.250; //The TOTAL delay between sensor readings. I think we need to factor in 
 	static final int closeCallDist = 300; // the threshold to trigger a close call popup
 	static final int collisionDist = 20; // the threshhold to trigger a collision popup
    //runway total length is 59 inches
@@ -49,17 +49,33 @@ public class TheSeerSystem {
                 
                
             }});
+        
         		//load and store the plane image
                 planeImage = loadPlane();
                 
                 //establish serial connection to the Arudino
                 //we create the comport obj and open the arudino port
                 comPort = SerialPort.getCommPort("COM5"); // or whatever port we end up using
-                //TODO: I get an error here. Is it because I am not hooked up to the Aruidno>        
+                //If the arduino isnt hooked up on the port above, program throws an error  
                 comPort.openPort();
-                comPort.setBaudRate(9600);
-             //   comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,0, 0);
-              
+                
+                try {
+              //THE INTERNET TELLS ME THIS MIGHT FIX OUR ISSUE
+            	Thread.sleep(10000);// 10 second sleep to initialize the arduino
+           
+                if(!comPort.isOpen()) {
+                	//port didnt open, uh oh	
+                		
+                	throw new Exception("Could not connect to the Arudino.");	
+                	}
+                
+                comPort.setBaudRate(9600);	
+                
+                } catch(Exception e) {
+                	e.printStackTrace();//haha
+                }
+                //  comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING,0, 0); //changes the port mode but I dont think we need it.
+                
                 /* //testing
                 Stack<String> testValues = new Stack<>();
                 for(int i = 0; i < 59; i++) {
@@ -70,23 +86,19 @@ public class TheSeerSystem {
                 	}
                 }  */ //testing
                 
-                //here we create the popups that will be used
-                
                 try {
                 while (true)
                 {
-                	 //wait for the serial interrupt
+                	
+                	
+                	 
                 	//System.out.println(comPort.isOpen());
                 	//System.out.println(comPort.bytesAvailable());
-                	if(!comPort.isOpen()) {
-                	//port didnt open, uh oh	
-                		
-                	throw new Exception("Could not connect to the Arudino.");	
-                	}
-                		
+                	
                 		
                 	
                 	
+                	//wait for the serial interrupt
                 	while(comPort.bytesAvailable() == 0) {
                 		//there is no message to read, we wait
                 	     
@@ -98,10 +110,14 @@ public class TheSeerSystem {
              	   	byte[] readBuffer = new byte[comPort.bytesAvailable()];
              	    //we convert the byte buffer into one big string displaying the data of the two sensors
                 	String msg = new String(readBuffer);
+                	msg.replace("\0", "");
+                	//removes the null terminator from the string. This might cause issues if we dont remove it
+                	//because of how we manipulate the strings manually below, we dont have to worry about causing an error due to the string not having it.
                 	
                 	// String msg = testValues.pop(); //testing
                 	 //String msg = "o050o050"; //testing
-                	//messages will be in the form of XiiiiXiiii, where
+                	
+                	//messages will be in the form of XiiiXiii, where
                 	//X is either f for 'free' or o for 'occupied'
                 	//iii are 3 digits displaying its position relative to the start of the sensor.
                 	
@@ -164,7 +180,7 @@ public class TheSeerSystem {
 	                	//the runways changing color based on if there is a plane or not COMPLETE
 	                	//draw a plane icon on the screen, relative to the physical plane's location on the runway. DONE, WORKS IN TESTING. TEST WITH REAL SENSOR READY
                 		//On a panel, display runway number, plane occupancy, and speed COMPLETE
-                		//error correction
+                		//error correction for sensor misreads
                 		
                 	
                 	//TODO: What features can we add for polish?
@@ -201,6 +217,8 @@ public class TheSeerSystem {
     }
 public static int calculateSpeed(int prev, int curr) {
 	//calculate speed using the prev and current distance
+	//and the delay of time inbetween reads of the sensor.
+	
 	//USE THE REAL LIFE SENSOR READINGS!
 	return (int) ((curr- prev) / delay);
 }
