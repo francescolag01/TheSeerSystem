@@ -59,8 +59,8 @@ void loop() {
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
 
-  if (inches1 < 0) {
-    Serial.print("----");
+  if ((inches1 < 0) || (inches2 < 0)) {
+    Serial.print("--------");
   }
   else {
 
@@ -82,12 +82,7 @@ void loop() {
       }
       Serial.print(inches1);
     }
-  }
-
-  if (inches2 < 0) {
-    Serial.print("----");
-  }
-  else {
+    
 
     if (inches2 < 60) {
       Serial.print("o");
@@ -108,6 +103,7 @@ void loop() {
       Serial.print(inches2);
     }
   }
+  
   
   delay(250);
 
