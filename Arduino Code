@@ -64,7 +64,7 @@ void loop() {
   }
   else {
 
-    if (inches1 < 12) {
+    if (inches1 < 60) {
       Serial.print("o");
       if (inches1 < 10) {
         Serial.print("00");
@@ -89,7 +89,7 @@ void loop() {
   }
   else {
 
-    if (inches2 < 12) {
+    if (inches2 < 60) {
       Serial.print("o");
       if (inches2 < 10) {
         Serial.print("00");
