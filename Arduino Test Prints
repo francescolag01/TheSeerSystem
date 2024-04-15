@@ -1,0 +1,56 @@
+int i;
+
+void setup() {
+  Serial.begin(9600);
+  i = 0;
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+
+  switch(i) {
+    case 0:
+      Serial.print("f253o012");
+      Serial.println();
+      break;
+    case 1:
+      Serial.print("f153o053");
+      Serial.println();
+      break;
+    case 2:
+      Serial.print("f153o053");
+      Serial.println();
+      break;
+    case 3:
+      Serial.print("f078f095");
+      Serial.println();
+      break;
+    case 4:
+      Serial.print("o054f102");
+      Serial.println();
+      break;
+    case 5:
+      Serial.print("o009f212");
+      Serial.println();
+      break;
+    case 6:
+      Serial.print("o003o012");
+      Serial.println();
+      break;
+    case 7:
+      Serial.print("o003o012");
+      Serial.println();
+      break;
+    case 8:
+      Serial.print("f123f123");
+      Serial.println();
+      break;
+    case 9:
+      Serial.print("--------");
+      Serial.println();
+      break;
+    default:
+      break;
+  }
+  i += 1;
+}
