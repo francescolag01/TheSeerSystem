@@ -15,7 +15,9 @@ int trigPin1 = 3;    // Trigger of first sensor
 int echoPin1 = 2;    // Echo of first sensor
 int trigPin2 = 5;
 int echoPin2 = 4;
-int duration1, inches1, duration2, inches2;
+// long vs int could be reason for negative values?
+// also seems to stop after short duration of being powered on
+long duration1, inches1, duration2, inches2;
 
  
 void setup() {
@@ -57,48 +59,58 @@ void loop() {
   // duration is the time (in microseconds) from the sending
   // of the ping to the reception of its echo off of an object.
 
-
-  if (inches1 < 12) {
-    Serial.print("o");
-    if (inches1 < 10) {
-      Serial.print("00");
-    }
-    else {
-      Serial.print("0");
-    }
-    Serial.print(inches1);
-    }
-
+  if (inches1 < 0) {
+    Serial.print("----");
+  }
   else {
-    Serial.print("f");
-    if (inches1 < 100) {
-      Serial.print("0");
-    }
-    Serial.print(inches1);
-  }
 
-  if (inches2 < 12) {
-    Serial.print("o");
-    if (inches2 < 10) {
-      Serial.print("00");
-    }
+    if (inches1 < 12) {
+      Serial.print("o");
+      if (inches1 < 10) {
+        Serial.print("00");
+      }
+      else {
+        Serial.print("0");
+      }
+      Serial.print(inches1);
+      }
+
     else {
-      Serial.print("0");
+      Serial.print("f");
+      if (inches1 < 100) {
+        Serial.print("0");
+      }
+      Serial.print(inches1);
     }
-    Serial.print(inches2);
   }
 
+  if (inches2 < 0) {
+    Serial.print("----");
+  }
   else {
-    Serial.print("f");
-    if (inches2 < 100) {
-      Serial.print("0");
-    }
-    Serial.print(inches2);
-  }
 
-  Serial.println();
+    if (inches2 < 12) {
+      Serial.print("o");
+      if (inches2 < 10) {
+        Serial.print("00");
+      }
+      else {
+        Serial.print("0");
+      }
+      Serial.print(inches2);
+    }
+
+    else {
+      Serial.print("f");
+      if (inches2 < 100) {
+        Serial.print("0");
+      }
+      Serial.print(inches2);
+    }
+  }
   
   delay(250);
+
+  Serial.println();
+
 }
-
-
