@@ -25,7 +25,7 @@ public class TheSeerSystem{
 	public static Image planeImage; // plane icon drawn on screen
 	public static SerialPort comPort;
 	//TODO: DEFINE THE FOLLOWING FINAL VARIBLES
-	static final double delay = 250.250; //The TOTAL delay between sensor readings. I think we need to factor in 
+	static final double delay = 250; //The TOTAL delay between sensor readings. I think we need to factor in 
 	static final int closeCallDist = 300; // the threshold to trigger a close call popup
 	static final int collisionDist = 20; // the threshhold to trigger a collision popup
    //runway total length is 59 inches
@@ -61,7 +61,7 @@ public class TheSeerSystem{
                 
                 try {
               //THE INTERNET TELLS ME THIS MIGHT FIX OUR ISSUE
-            	Thread.sleep(10000);// 10 second sleep to initialize the arduino
+            	Thread.sleep(1000);// 10 second sleep to initialize the arduino
            
                 if(!comPort.isOpen()) {
                 	//port didnt open, uh oh	
@@ -70,6 +70,7 @@ public class TheSeerSystem{
                 	}
                 
                 comPort.setBaudRate(9600);	
+                comPort.setComPortTimeouts(SerialPort.TIMEOUT_READ_BLOCKING, 0, 0);
                 
                 } catch(Exception e) {
                 	e.printStackTrace();//haha
@@ -85,6 +86,8 @@ public class TheSeerSystem{
                 		testValues.push(String.format("o0%do0%d",i,i));
                 	}
                 }  */ //testing
+                byte[] test = new byte[comPort.bytesAvailable()];
+                int clear = comPort.readBytes(test, test.length);
                 
                 try {
                 while (true)
@@ -107,101 +110,111 @@ public class TheSeerSystem{
                 	//read the serial port
                 	//TODO: Determine how we want to send the message from the arduino, and how to process it in this application 
                 		//done, I expanded on ryans idea and changed it a bit.
-             	   	byte[] readBuffer = new byte[comPort.bytesAvailable()];
+             	   	byte[] readBuffer = new byte[10];
              	    //we convert the byte buffer into one big string displaying the data of the two sensors
+             		int numRead = comPort.readBytes(readBuffer, readBuffer.length);
                 	String msg = new String(readBuffer);
-                	msg.replace("\0", "");
-                	//removes the null terminator from the string. This might cause issues if we dont remove it
-                	//because of how we manipulate the strings manually below, we dont have to worry about causing an error due to the string not having it.
-                	
-                	// String msg = testValues.pop(); //testing
-                	 //String msg = "o050o050"; //testing
-                	
-                	//messages will be in the form of XiiiXiii, where
-                	//X is either f for 'free' or o for 'occupied'
-                	//iii are 3 digits displaying its position relative to the start of the sensor.
-                	
-                	//this program tracks occupancy and distance, and it also tracks the occupancy and distance of the last sensor reading.
-                	
-                	prevRunwayOneOcc = currRunwayOneOcc;
-                	currRunwayOneOcc = msg.charAt(0) == 'f' ? false : true;
-                	prevRunwayOneDist = currRunwayOneDist;
-                	currRunwayOneDist = Integer.parseInt(msg.substring(1,4));
-                	
-                	prevRunwayTwoOcc = currRunwayTwoOcc;
-                	currRunwayTwoOcc = msg.charAt(4) == 'f' ? false : true;
-                	prevRunwayTwoDist = currRunwayTwoDist;
-                	currRunwayTwoDist = Integer.parseInt(msg.substring(5,8));
-                	
-                	
-                	//We use this to calculate the speed of each aircraft, and also to track arrivals and departures.
-                	
-                	//if the runway was previously free, and a plane lands, an arrival popup will display
-                	//if the runway was previously occupied, and a plane leaves, a departure popup will display
-                	
-                	//first we handle popups
-                	//runway one 
-                	if(prevRunwayOneOcc == false && currRunwayOneOcc == true) {
-                		// arrival
-                		JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has landed on runway 1");
-                	}else if(prevRunwayOneOcc == true && currRunwayOneOcc == false) {
-                		//departure
-                		JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has taken off from runway 1");
-                	}else {
-                		//no popup, do nothing
-                	}
-                	
-                	//runway two
-                	if(prevRunwayTwoOcc == false && currRunwayTwoOcc == true) {
-                		// arrival
-                		JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has landed on runway 2");
-                	}else if(prevRunwayTwoOcc == true && currRunwayTwoOcc == false) {
-                		//departure
-                		JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has taken off from runway 2");
-                	}else {
-                		//no popup, do nothing
-                	}
-                	
-                	if(computeDistance(currRunwayOneDist,currRunwayTwoDist) >= collisionDist) {
-                		//collision (oh no)
-                	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"OH NO: AIRCRAFT HAVE COLLIDED ON RUNWAY 1 AND 2.");
-                	}else if(computeDistance(currRunwayOneDist,currRunwayTwoDist) >= closeCallDist) {
-                		//close call popup
-                	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"DANGER: AIRCRAFT ARE LESS THAN 300 FEET APART.");
-                	}else {
-                		//no danger of collision, do nothing
+                	System.out.println(msg);
+                	if(!(msg.charAt(0) =='-')) {
+                		//msg.replace("\0", "");
+                    	//removes the null terminator from the string. This might cause issues if we dont remove it
+                    	//because of how we manipulate the strings manually below, we dont have to worry about causing an error due to the string not having it.
+                    	
+                    	// String msg = testValues.pop(); //testing
+                    	 //String msg = "o050o050"; //testing
+                    	
+                    	//messages will be in the form of XiiiXiii, where
+                    	//X is either f for 'free' or o for 'occupied'
+                    	//iii are 3 digits displaying its position relative to the start of the sensor.
+                    	
+                    	//this program tracks occupancy and distance, and it also tracks the occupancy and distance of the last sensor reading.
+                    	
+                    	prevRunwayOneOcc = currRunwayOneOcc;
+                    	currRunwayOneOcc = msg.charAt(0) == 'f' ? false : true;
+                    	prevRunwayOneDist = currRunwayOneDist;
+                    	currRunwayOneDist = Integer.parseInt(msg.substring(1,4));
+                    	
+                    	prevRunwayTwoOcc = currRunwayTwoOcc;
+                    	currRunwayTwoOcc = msg.charAt(4) == 'f' ? false : true;
+                    	prevRunwayTwoDist = currRunwayTwoDist;
+                    	currRunwayTwoDist = Integer.parseInt(msg.substring(5,8));
+                    	
+                    	
+                    	//We use this to calculate the speed of each aircraft, and also to track arrivals and departures.
+                    	
+                    	//if the runway was previously free, and a plane lands, an arrival popup will display
+                    	//if the runway was previously occupied, and a plane leaves, a departure popup will display
+                    	
+                    	//first we handle popups
+                    	//runway one 
+                    	
+                    	if(prevRunwayOneOcc == false && currRunwayOneOcc == true) {
+                    		// arrival
+                    		//JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has landed on runway 1");
+                    	}else if(prevRunwayOneOcc == true && currRunwayOneOcc == false) {
+                    		//departure
+                    	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has taken off from runway 1");
+                    	}else {
+                    		//no popup, do nothing
+                    	}
+                    	
+                    	//runway two
+                    	if(prevRunwayTwoOcc == false && currRunwayTwoOcc == true) {
+                    		// arrival
+                    		//JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has landed on runway 2");
+                    	}else if(prevRunwayTwoOcc == true && currRunwayTwoOcc == false) {
+                    		//departure
+                    		//JOptionPane.showMessageDialog(TheSeerSystem.f,"Plane has taken off from runway 2");
+                    	}else {
+                    		//no popup, do nothing
+                    	}
+                    	
+                    	if(computeDistance(currRunwayOneDist,currRunwayTwoDist) >= collisionDist) {
+                    		//collision (oh no)
+                    	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"OH NO: AIRCRAFT HAVE COLLIDED ON RUNWAY 1 AND 2.");
+                    	}else if(computeDistance(currRunwayOneDist,currRunwayTwoDist) >= closeCallDist) {
+                    		//close call popup
+                    	//	JOptionPane.showMessageDialog(TheSeerSystem.f,"DANGER: AIRCRAFT ARE LESS THAN 300 FEET APART.");
+                    	}else {
+                    		//no danger of collision, do nothing
+                    		
+                    	}
+                    	//now we check their distances, and see if they are close enough to be a close call or a collision
+                    	
+                    	
+                 	   //TODO:What is the main functionality of the software?
+    	                	//Popups stating arrivals, departures, near misses, and collisions REMAKE THEM SO THEY APPEAR IN THE CORNER, and DONT STOP WHOLE PROGRAM
+    	                	//the runways changing color based on if there is a plane or not COMPLETE
+    	                	//draw a plane icon on the screen, relative to the physical plane's location on the runway. DONE, WORKS IN TESTING. TEST WITH REAL SENSOR READY
+                    		//On a panel, display runway number, plane occupancy, and speed COMPLETE
+                    		//error correction for sensor misreads
+                    		
+                    	
+                    	//TODO: What features can we add for polish?
+                    		//make the popups not appear in the middle of the screen
+                    		//draw text to label useful information
+                 	   		//change direction of plane if it goes backwards
+                    		//add a logo
+                    		//settings
+                    		//make the runway intersection look prettier
+                    	
+                    	//TODO: potential problems I forsee
+        				//the sensor could be jittery and cause the icon of the plane to fly around the screen, give innacurate readings, or make 10000 popups appear
+        				//something crashing during a demo, and us looking stupid. Must run the program for a very long time to see if any bugs arise
+        				//what happens when the program is activated and things are on the runway? or if theyre all off the runway?
+                    		//I tested this by creating a string with the format (String msg = "o012f100";), and the program starts correctly in all configurations.
+                    	//when I simulate the planes crashing, the program gets stuck in an infinite popup loop. 
+                    	//all of the text, images, and shapes are drawn to the screen with hand drawn coordinates.
+                    	//the program stops running when a popup opens (run it in another thread)
+                    	
+                    	//redraw the screen to update the images
                 		
+                    	dp.update(dp.getGraphics());
+                	}else {
+                		System.out.println("Error: Sensor Misread");
                 	}
-                	//now we check their distances, and see if they are close enough to be a close call or a collision
                 	
-                	
-             	   //TODO:What is the main functionality of the software?
-	                	//Popups stating arrivals, departures, near misses, and collisions REMAKE THEM SO THEY APPEAR IN THE CORNER, and DONT STOP WHOLE PROGRAM
-	                	//the runways changing color based on if there is a plane or not COMPLETE
-	                	//draw a plane icon on the screen, relative to the physical plane's location on the runway. DONE, WORKS IN TESTING. TEST WITH REAL SENSOR READY
-                		//On a panel, display runway number, plane occupancy, and speed COMPLETE
-                		//error correction for sensor misreads
-                		
-                	
-                	//TODO: What features can we add for polish?
-                		//make the popups not appear in the middle of the screen
-                		//draw text to label useful information
-             	   		//change direction of plane if it goes backwards
-                		//add a logo
-                		//settings
-                		//make the runway intersection look prettier
-                	
-                	//TODO: potential problems I forsee
-    				//the sensor could be jittery and cause the icon of the plane to fly around the screen, give innacurate readings, or make 10000 popups appear
-    				//something crashing during a demo, and us looking stupid. Must run the program for a very long time to see if any bugs arise
-    				//what happens when the program is activated and things are on the runway? or if theyre all off the runway?
-                		//I tested this by creating a string with the format (String msg = "o012f100";), and the program starts correctly in all configurations.
-                	//when I simulate the planes crashing, the program gets stuck in an infinite popup loop. 
-                	//all of the text, images, and shapes are drawn to the screen with hand drawn coordinates.
-                	//the program stops running when a popup opens (run it in another thread)
-                	
-                	//redraw the screen to update the images
-                	 dp.update(dp.getGraphics());
+                	 
                   
                 }
              } catch (Exception e) {
@@ -215,12 +228,12 @@ public class TheSeerSystem{
             
             
     }
-public static int calculateSpeed(int prev, int curr) {
+public static double calculateSpeed(int prev, int curr) {
 	//calculate speed using the prev and current distance
 	//and the delay of time inbetween reads of the sensor.
 	
 	//USE THE REAL LIFE SENSOR READINGS!
-	return (int) ((curr- prev) / delay);
+	return ((curr- prev) / delay);
 }
     
     
@@ -228,7 +241,7 @@ public static double scaleDistance(int distance) {
 	//this function takes in the real life distance of the plane,
 	//and scales it so the icon on the screen is proportional to the real life distance.
 	//TODO: DETERMINE THE FACTOR THAT SCALES IT THE MOST APPROPRITATELY
-	double factor = 14.5;
+	double factor = 14.9;
 	double dist = distance * factor;
 	//System.out.println(distance + " " + dist);
 	return dist;
@@ -325,7 +338,7 @@ class drawPanel extends JPanel {
         g.drawString("Status:", 600+a, 630+b);
         if(TheSeerSystem.currRunwayOneOcc == true) {
         	g.drawString("Occupied",640+a,630+b);
-        	g.drawString(Integer.toString(TheSeerSystem.calculateSpeed(TheSeerSystem.prevRunwayOneDist,TheSeerSystem.currRunwayOneDist)), 640+a, 660+b);
+        	g.drawString(Double.toString(TheSeerSystem.calculateSpeed(TheSeerSystem.prevRunwayOneDist,TheSeerSystem.currRunwayOneDist)), 640+a, 660+b);
         }else {
         	g.drawString("Free",640+a,630+b);
         	g.drawString("N/A", 640+a, 660+b);
@@ -339,7 +352,7 @@ class drawPanel extends JPanel {
         g.drawString("Status:", 600+a, 730+b);
         if(TheSeerSystem.currRunwayTwoOcc == true) {
         	g.drawString("Occupied",640+a,730+b);
-        	g.drawString(Integer.toString(TheSeerSystem.calculateSpeed(TheSeerSystem.prevRunwayTwoDist,TheSeerSystem.currRunwayTwoDist)), 640+a, 760+b);
+        	g.drawString(Double.toString(TheSeerSystem.calculateSpeed(TheSeerSystem.prevRunwayTwoDist,TheSeerSystem.currRunwayTwoDist)), 640+a, 760+b);
         }else {
         	g.drawString("Free",640+a,730+b);
         	g.drawString("N/A", 640+a, 760+b);
